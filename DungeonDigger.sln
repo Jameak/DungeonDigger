@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26403.7
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DungeonDigger.UI", "src\DungeonDigger.UI\DungeonDigger.UI.csproj", "{EF12E0FB-FA3F-45F0-834D-3C9880FBAA92}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E6F93FD0-C2BF-4D99-9E76-4BCB61B2D49A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DungeonDigger.Generation", "src\DungeonDigger.Generation\DungeonDigger.Generation.csproj", "{749F605A-7903-4300-9C51-CB952B11486D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EF12E0FB-FA3F-45F0-834D-3C9880FBAA92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF12E0FB-FA3F-45F0-834D-3C9880FBAA92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF12E0FB-FA3F-45F0-834D-3C9880FBAA92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF12E0FB-FA3F-45F0-834D-3C9880FBAA92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{749F605A-7903-4300-9C51-CB952B11486D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{749F605A-7903-4300-9C51-CB952B11486D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{749F605A-7903-4300-9C51-CB952B11486D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{749F605A-7903-4300-9C51-CB952B11486D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EF12E0FB-FA3F-45F0-834D-3C9880FBAA92} = {E6F93FD0-C2BF-4D99-9E76-4BCB61B2D49A}
+		{749F605A-7903-4300-9C51-CB952B11486D} = {E6F93FD0-C2BF-4D99-9E76-4BCB61B2D49A}
+	EndGlobalSection
+EndGlobal
