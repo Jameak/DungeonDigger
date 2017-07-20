@@ -12,17 +12,33 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DungeonDigger.UI.Controls;
 
 namespace DungeonDigger.UI
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         public MainWindow()
         {
             InitializeComponent();
+
+            var map = new MapControl(TempCreateMap());
+            Grid.SetColumn(map,0);
+            Grid.SetRow(map,0);
+            Grid.Children.Add(map);
+        }
+
+        private static TempLocationEnum[,] TempCreateMap()
+        {
+            var locs = new TempLocationEnum[30,20];
+            for (int i = 0; i < locs.GetLength(0); i++)
+            {
+                for (int j = 0; j < locs.GetLength(1); j++)
+                {
+                    locs[i,j] = (j + i) % 4 == 0 ? TempLocationEnum.Room : TempLocationEnum.Wall;
+                }
+            }
+            return locs;
         }
     }
 }
