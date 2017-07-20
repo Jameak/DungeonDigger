@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DungeonDigger.Generation;
 using DungeonDigger.UI.ViewModels;
 
 namespace DungeonDigger.UI.Controls
@@ -34,7 +35,7 @@ namespace DungeonDigger.UI.Controls
 
         public bool Selected { get; private set; }
         
-        public TileControl(TempLocationEnum loc, int x, int y)
+        public TileControl(Tile loc, int x, int y)
         {
             X = x;
             Y = y;
@@ -52,10 +53,10 @@ namespace DungeonDigger.UI.Controls
 
             switch (loc)
             {
-                case TempLocationEnum.Room:
+                case Tile.Room:
                     Image.Background = new SolidColorBrush(Colors.White);
                     break;
-                case TempLocationEnum.Wall:
+                case Tile.Wall:
                     Image.Background = new SolidColorBrush(Colors.Black);
                     break;
                 default:

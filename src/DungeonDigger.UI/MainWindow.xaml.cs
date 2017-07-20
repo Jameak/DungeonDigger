@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DungeonDigger.Generation;
 using DungeonDigger.UI.Controls;
 
 namespace DungeonDigger.UI
@@ -28,14 +29,14 @@ namespace DungeonDigger.UI
             Grid.Children.Add(map);
         }
 
-        private static TempLocationEnum[,] TempCreateMap()
+        private static Tile[,] TempCreateMap()
         {
-            var locs = new TempLocationEnum[30,20];
+            var locs = new Tile[30,20];
             for (int i = 0; i < locs.GetLength(0); i++)
             {
                 for (int j = 0; j < locs.GetLength(1); j++)
                 {
-                    locs[i,j] = (j + i) % 4 == 0 ? TempLocationEnum.Room : TempLocationEnum.Wall;
+                    locs[i,j] = (j + i) % 4 == 0 ? Tile.Room : Tile.Wall;
                 }
             }
             return locs;

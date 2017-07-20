@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DungeonDigger.Generation;
 using DungeonDigger.UI.ViewModels;
 
 namespace DungeonDigger.UI.Controls
@@ -26,7 +27,7 @@ namespace DungeonDigger.UI.Controls
         private List<TileControl> _selectedTiles;
         private List<TileControl> _previousSelection;
 
-        public MapControl(TempLocationEnum[,] map)
+        public MapControl(Tile[,] map)
         {
             InitializeComponent();
             _tiles = new TileControl[map.GetLength(0),map.GetLength(1)];
