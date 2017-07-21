@@ -33,9 +33,10 @@ namespace DungeonDigger.UI.Controls
         public readonly int X;
         public readonly int Y;
 
+        public Tile Tile { get; private set; }
         public bool Selected { get; private set; }
         
-        public TileControl(Tile loc, int x, int y)
+        public TileControl(Tile tile, int x, int y)
         {
             X = x;
             Y = y;
@@ -51,17 +52,7 @@ namespace DungeonDigger.UI.Controls
                 if (Selected) _vm.MarginSize = _marginSize;
             };
 
-            switch (loc)
-            {
-                case Tile.Room:
-                    Image.Background = new SolidColorBrush(Colors.White);
-                    break;
-                case Tile.Wall:
-                    Image.Background = new SolidColorBrush(Colors.Black);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(loc), loc, "Invalid location type specified");
-            }
+            SetTile(tile);
         }
 
         public void Select()
@@ -76,6 +67,12 @@ namespace DungeonDigger.UI.Controls
             _vm.GridBackground = Colors.Transparent;
             _vm.MarginSize = 0;
             Selected = false;
+        }
+
+        public void SetTile(Tile tile)
+        {
+            Image.Source = TileHelper.GetTileImage(tile);
+            Tile = tile;
         }
     }
 }

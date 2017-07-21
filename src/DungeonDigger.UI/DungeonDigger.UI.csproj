@@ -36,6 +36,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -54,9 +55,21 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BitmapHelper.cs" />
+    <Compile Include="Controls\MapCustomizerControl.xaml.cs">
+      <DependentUpon>MapCustomizerControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Events\AreaSelectionChangedEvent.cs" />
+    <Compile Include="Events\ChangeTileEvent.cs" />
+    <Compile Include="TileHelper.cs" />
     <Compile Include="ViewModels\Base\BaseViewModel.cs" />
+    <Compile Include="ViewModels\MapCustomizerViewModel.cs" />
     <Compile Include="ViewModels\TileControlViewModel.cs" />
     <Page Include="Controls\MapControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MapCustomizerControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -64,7 +77,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Windows\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -78,7 +91,7 @@
     <Compile Include="Controls\TileControl.xaml.cs">
       <DependentUpon>TileControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="Windows\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
@@ -114,6 +127,16 @@
       <Project>{749f605a-7903-4300-9c51-cb952b11486d}</Project>
       <Name>DungeonDigger.Generation</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <None Include="Resources\TileEmpty.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TileUnknown.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TileWall.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

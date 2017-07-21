@@ -14,19 +14,22 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using DungeonDigger.Generation;
+using DungeonDigger.UI.Events;
 using DungeonDigger.UI.ViewModels;
 
 namespace DungeonDigger.UI.Controls
 {
     public partial class MapControl : UserControl
     {
+        private const double Epsilon = 0.0000001;
+
         private readonly TileControl[,] _tiles;
         private bool _dragging;
         private Point? _dragStartPoint;
         private double _tileWidth;
         private List<TileControl> _selectedTiles;
         private List<TileControl> _previousSelection;
-
+        
         public MapControl(Tile[,] map)
         {
             InitializeComponent();
@@ -88,7 +91,7 @@ namespace DungeonDigger.UI.Controls
 
             var endPos = e.GetPosition(MapGrid);
             //User moved their mouse out of the control while dragging, so cancel the drag.
-            if (endPos.X - double.Epsilon < 0.0 && endPos.X + double.Epsilon > MapGrid.Width && endPos.Y - double.Epsilon < 0.0 && endPos.Y + double.Epsilon > MapGrid.Height)
+            if (endPos.X - Epsilon < 0.0 && endPos.X + Epsilon > MapGrid.Width && endPos.Y - Epsilon < 0.0 && endPos.Y + Epsilon > MapGrid.Height)
             {
                 CancelDrag();
                 return;
@@ -119,7 +122,7 @@ namespace DungeonDigger.UI.Controls
             
             var endPos = e.GetPosition(MapGrid);
             //User moved their mouse out of the control while dragging, so cancel the drag.
-            if (endPos.X - double.Epsilon < 0.0 && endPos.X + double.Epsilon > MapGrid.Width && endPos.Y - double.Epsilon < 0.0 && endPos.Y + double.Epsilon > MapGrid.Height)
+            if (endPos.X - Epsilon < 0.0 && endPos.X + Epsilon > MapGrid.Width && endPos.Y - Epsilon < 0.0 && endPos.Y + Epsilon > MapGrid.Height)
             {
                 CancelDrag();
                 return;
@@ -128,11 +131,15 @@ namespace DungeonDigger.UI.Controls
             SelectTiles(_dragStartPoint.Value, endPos);
             _previousSelection = GetSelectedTiles();
             StopDrag();
+            RaiseEvent(new AreaSelectionChangedEvent(AreaSelectionChangedEvent, GetSelectedTiles().Count != 0));
         }
 
         private void MapGrid_OnMouseLeave(object sender, MouseEventArgs e)
         {
-            if (_dragging) CancelDrag();
+            if (_dragging)
+            {
+                CancelDrag();
+            }
         }
 
         private void StopDrag()
@@ -154,6 +161,8 @@ namespace DungeonDigger.UI.Controls
                     tile.Select();
                 }
             }
+
+            RaiseEvent(new AreaSelectionChangedEvent(AreaSelectionChangedEvent, GetSelectedTiles().Count != 0));
         }
 
         private void ResetSelection()
@@ -170,10 +179,10 @@ namespace DungeonDigger.UI.Controls
 
         private void SelectTiles(Point start, Point end)
         {
-            Debug.Assert(start.X + double.Epsilon > 0.0 && start.X - double.Epsilon < MapGrid.Width, "Start point X-value outside of expected range");
-            Debug.Assert(start.Y + double.Epsilon > 0.0 && start.Y - double.Epsilon < MapGrid.Height, "Start point Y-value outside of expected range");
-            Debug.Assert(end.X + double.Epsilon > 0.0 && end.X - double.Epsilon < MapGrid.Width, "End point X-value outside of expected range");
-            Debug.Assert(end.Y + double.Epsilon > 0.0 && end.Y - double.Epsilon < MapGrid.Height, "End point Y-value outside of expected range");
+            Debug.Assert(start.X + Epsilon > 0.0 && start.X - Epsilon < MapGrid.Width, "Start point X-value outside of expected range");
+            Debug.Assert(start.Y + Epsilon > 0.0 && start.Y - Epsilon < MapGrid.Height, "Start point Y-value outside of expected range");
+            Debug.Assert(end.X + Epsilon > 0.0 && end.X - Epsilon < MapGrid.Width, "End point X-value outside of expected range");
+            Debug.Assert(end.Y + Epsilon > 0.0 && end.Y - Epsilon < MapGrid.Height, "End point Y-value outside of expected range");
             
             ResetSelection();
 
@@ -290,5 +299,17 @@ namespace DungeonDigger.UI.Controls
 
             return _selectedTiles;
         }
+
+        #region Events
+        public static readonly RoutedEvent AreaSelectionChangedEvent =
+            EventManager.RegisterRoutedEvent(nameof(AreaSelectionChangedEvent), RoutingStrategy.Bubble,
+                typeof(RoutedEventHandler), typeof(MapControl));
+
+        public event RoutedEventHandler AreaSelectionChanged
+        {
+            add { AddHandler(AreaSelectionChangedEvent, value); }
+            remove { RemoveHandler(AreaSelectionChangedEvent, value); }
+        }
+        #endregion
     }
 }
