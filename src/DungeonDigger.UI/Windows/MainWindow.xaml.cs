@@ -71,5 +71,11 @@ namespace DungeonDigger.UI
                 CustomizerTab.DisableCustomizing();
             }
         }
+
+        private void GenerationControl_OnMapGenerated(object sender, RoutedEventArgs e)
+        {
+            var arg = (MapGeneratedEvent) e;
+            SetMap(arg.Map);
+        }
     }
 }

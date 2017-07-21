@@ -56,15 +56,24 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="BitmapHelper.cs" />
+    <Compile Include="Controls\GenerationControl.xaml.cs">
+      <DependentUpon>GenerationControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\MapCustomizerControl.xaml.cs">
       <DependentUpon>MapCustomizerControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Events\AreaSelectionChangedEvent.cs" />
     <Compile Include="Events\ChangeTileEvent.cs" />
+    <Compile Include="Events\MapGeneratedEvent.cs" />
     <Compile Include="TileHelper.cs" />
     <Compile Include="ViewModels\Base\BaseViewModel.cs" />
+    <Compile Include="ViewModels\GenerationControlViewModel.cs" />
     <Compile Include="ViewModels\MapCustomizerViewModel.cs" />
     <Compile Include="ViewModels\TileControlViewModel.cs" />
+    <Page Include="Controls\GenerationControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\MapControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

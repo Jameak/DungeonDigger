@@ -29,6 +29,9 @@
                 <TabItem Header="Customization">
                     <controls:MapCustomizerControl x:Name="CustomizerTab" TileChanged="MapCustomizerControl_OnTileChanged"/>
                 </TabItem>
+                <TabItem Header="Generation">
+                    <controls:GenerationControl MapGenerated="GenerationControl_OnMapGenerated"/>
+                </TabItem>
             </TabControl>
         </Grid>
     </DockPanel>
