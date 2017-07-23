@@ -18,5 +18,6 @@ namespace DungeonDigger.Generation
         DoorClosed,
         DoorOpen,
         DoorSecret,
+        Unknown
     }
 }

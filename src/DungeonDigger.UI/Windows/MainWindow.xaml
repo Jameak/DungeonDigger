@@ -10,7 +10,7 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Header="_Placeholder"/>
+                <MenuItem Header="Import TSV" Click="MenuItemImportTsv_OnClick"/>
             </MenuItem>
         </Menu>
         <Grid DockPanel.Dock="Bottom" x:Name="MainGrid">

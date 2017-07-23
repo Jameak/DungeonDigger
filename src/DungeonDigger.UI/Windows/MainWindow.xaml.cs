@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using DungeonDigger.Generation;
@@ -76,6 +77,27 @@ namespace DungeonDigger.UI
         {
             var arg = (MapGeneratedEvent) e;
             SetMap(arg.Map);
+        }
+
+        private void MenuItemImportTsv_OnClick(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog()
+            {
+                Title = "Select TSV-formatted file to load",
+                Filter = "Supported files|*.tsv;*.txt",
+                Multiselect = false
+            };
+
+            var result = dialog.ShowDialog();
+
+            if (result != null && result.Value)
+            {
+                using (var stream = new StreamReader(dialog.OpenFile()))
+                {
+                    SetMap(TsvParser.Parse(stream));
+                }
+
+            }
         }
     }
 }
