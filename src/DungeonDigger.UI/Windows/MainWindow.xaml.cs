@@ -7,33 +7,32 @@ using DungeonDigger.Generation;
 using DungeonDigger.UI.Controls;
 using DungeonDigger.UI.Events;
 
-namespace DungeonDigger.UI
+namespace DungeonDigger.UI.Windows
 {
     public partial class MainWindow : Window
     {
-        private MapControl map;
+        private MapControl _map;
 
         public MainWindow()
         {
             InitializeComponent();
-
             SetMap(TempCreateMap());
         }
 
         private void SetMap(Tile[,] tiles)
         {
-            if (map != null)
+            if (_map != null)
             {
-                map.AreaSelectionChanged -= MapControl_OnAreaSelectionChanged;
-                MainGrid.Children.Remove(map);
+                _map.AreaSelectionChanged -= MapControl_OnAreaSelectionChanged;
+                MainGrid.Children.Remove(_map);
             }
 
-            map = new MapControl(tiles);
-            map.AreaSelectionChanged += MapControl_OnAreaSelectionChanged;
+            _map = new MapControl(tiles);
+            _map.AreaSelectionChanged += MapControl_OnAreaSelectionChanged;
 
-            Grid.SetColumn(map, 0);
-            Grid.SetRow(map, 0);
-            MainGrid.Children.Add(map);
+            Grid.SetColumn(_map, 0);
+            Grid.SetRow(_map, 0);
+            MainGrid.Children.Add(_map);
         }
 
         private static Tile[,] TempCreateMap()
@@ -54,9 +53,9 @@ namespace DungeonDigger.UI
         private void MapCustomizerControl_OnTileChanged(object sender, RoutedEventArgs e)
         {
             var arg = (ChangeTileEvent) e;
-            foreach (var selectedTile in map.GetSelectedTiles())
+            foreach (var selectedTile in _map.GetSelectedTiles())
             {
-                selectedTile.SetTile(arg.TileInfo.Tile);
+                _map.SetTile(selectedTile, arg.TileInfo.Tile);
             }
         }
 
@@ -97,6 +96,26 @@ namespace DungeonDigger.UI
                     SetMap(TsvParser.Parse(stream));
                 }
 
+            }
+        }
+
+        private void MenuItemSaveMap_OnClick(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Choose save location",
+                FileName = "dungeon",
+                DefaultExt = ".png",
+                AddExtension = true,
+                Filter = "All Files|*.*"
+            };
+
+            var result = dialog.ShowDialog();
+
+            if (result != null && result.Value)
+            {
+                if (!dialog.FileName.EndsWith(".png")) dialog.FileName = dialog.FileName + ".png";
+                BitmapHelper.SaveBitmapSource(_map.UIImage, dialog.FileName);
             }
         }
     }

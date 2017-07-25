@@ -1,16 +1,17 @@
-﻿<Window x:Class="DungeonDigger.UI.MainWindow"
+﻿<Window x:Class="DungeonDigger.UI.Windows.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DungeonDigger.UI"
+        xmlns:local="clr-namespace:DungeonDigger.UI.Windows"
         xmlns:controls="clr-namespace:DungeonDigger.UI.Controls"
         mc:Ignorable="d"
         Title="Dungeon Digger" Height="640" Width="1138">
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
-                <MenuItem Header="Import TSV" Click="MenuItemImportTsv_OnClick"/>
+                <MenuItem Header="_Save map" Click="MenuItemSaveMap_OnClick"/>
+                <MenuItem Header="_Import TSV" Click="MenuItemImportTsv_OnClick"/>
             </MenuItem>
         </Menu>
         <Grid DockPanel.Dock="Bottom" x:Name="MainGrid">

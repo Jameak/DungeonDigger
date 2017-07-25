@@ -1,18 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using DungeonDigger.Generation;
 using DungeonDigger.UI.Events;
 using DungeonDigger.UI.ViewModels;
@@ -22,46 +14,40 @@ namespace DungeonDigger.UI.Controls
     public partial class MapControl : UserControl
     {
         private const double Epsilon = 0.0000001;
+        public const int UITilePixelSize = 16;
 
-        private readonly TileControl[,] _tiles;
+        private readonly MapControlViewModel _vm;
+        private readonly TileStatus[,] _tiles;
         private bool _dragging;
         private Point? _dragStartPoint;
         private double _tileWidth;
-        private List<TileControl> _selectedTiles;
-        private List<TileControl> _previousSelection;
+        private List<TileStatus> _selectedTiles;
+        private List<TileStatus> _previousSelection;
+
+        public BitmapSource UIImage => _vm.TileBitmap;
         
         public MapControl(Tile[,] map)
         {
             InitializeComponent();
-            _tiles = new TileControl[map.GetLength(0),map.GetLength(1)];
+            _tiles = new TileStatus[map.GetLength(0),map.GetLength(1)];
+            _vm = new MapControlViewModel();
+            DataContext = _vm;
 
-            //Run through the given map, creating each tile and adding it to the UI grid and the _tiles array.
-            for (int i = 0; i < map.GetLength(0); i++)
-            {
-                MapGrid.ColumnDefinitions.Add(new ColumnDefinition());
-            }
+            _vm.TileBitmap = new WriteableBitmap(BitmapHelper.CreateBitmap(map, UITilePixelSize));
 
-            for (int i = 0; i < map.GetLength(1); i++)
+            for (int x = 0; x < map.GetLength(0); x++)
             {
-                MapGrid.RowDefinitions.Add(new RowDefinition());
-            }
-            
-            for (int i = 0; i < map.GetLength(0); i++)
-            {
-                for (int j = 0; j < map.GetLength(1); j++)
+                for (int y = 0; y < map.GetLength(1); y++)
                 {
-                    var elem = new TileControl(map[i, j], i, j);
-                    Grid.SetColumn(elem, i);
-                    Grid.SetRow(elem, j);
-                    MapGrid.Children.Add(elem);
-                    _tiles[i, j] = elem;
+                    _tiles[x,y] = new TileStatus(x,y){Tile = map[x,y]};
                 }
             }
 
+
             //Set the startup size of the grid. This should be immediately overwritten by the SizeChanged event firing, but this ensures we have a valid startup configuration.
-            MapGrid.Width = map.GetLength(0) * TileControl.TILE_SIZE_AT_STARTUP;
-            MapGrid.Height = map.GetLength(1) * TileControl.TILE_SIZE_AT_STARTUP;
-            _tileWidth = TileControl.TILE_SIZE_AT_STARTUP;
+            MapGrid.Width = map.GetLength(0) * UITilePixelSize;
+            MapGrid.Height = map.GetLength(1) * UITilePixelSize;
+            _tileWidth = UITilePixelSize;
 
             //When the control is resized, resize the internal grid to fill the available space without stretching.
             SizeChanged += (sender, args) =>
@@ -158,7 +144,7 @@ namespace DungeonDigger.UI.Controls
             {
                 foreach (var tile in _previousSelection)
                 {
-                    tile.Select();
+                    Select(tile);
                 }
             }
 
@@ -171,7 +157,7 @@ namespace DungeonDigger.UI.Controls
             {
                 for (int j = 0; j < _tiles.GetLength(1); j++)
                 {
-                    _tiles[i, j].Deselect();
+                    DeSelect(_tiles[i,j]);
                 }
             }
             _selectedTiles = null;
@@ -223,14 +209,14 @@ namespace DungeonDigger.UI.Controls
                 {
                     for (int j = minY; j < maxY; j++)
                     {
-                        _tiles[minX - 1, j].Select();
+                        Select(_tiles[minX - 1, j]);
                     }
                 }
                 else
                 {
                     for (int j = minY; j < maxY; j++)
                     {
-                        _tiles[0, j].Select();
+                        Select(_tiles[0, j]);
                     }
                 }
             }
@@ -240,14 +226,14 @@ namespace DungeonDigger.UI.Controls
                 {
                     for (int i = minX; i < maxX; i++)
                     {
-                        _tiles[i, minY - 1].Select();
+                        Select(_tiles[i, minY - 1]);
                     }
                 }
                 else
                 {
                     for (int i = minX; i < maxX; i++)
                     {
-                        _tiles[i, 0].Select();
+                        Select(_tiles[i, 0]);
                     }
                 }
             }
@@ -255,11 +241,11 @@ namespace DungeonDigger.UI.Controls
             {
                 if (minX > 0 && minY > 0)
                 {
-                    _tiles[minX - 1, minY - 1].Select();
+                    Select(_tiles[minX - 1, minY - 1]);
                 }
                 else
                 {
-                    _tiles[0, 0].Select();
+                    Select(_tiles[0, 0]);
                 }
             }
             else
@@ -269,7 +255,7 @@ namespace DungeonDigger.UI.Controls
                 {
                     for (int j = minY; j < maxY; j++)
                     {
-                        _tiles[i, j].Select();
+                        Select(_tiles[i, j]);
                     }
                 }
             }
@@ -278,26 +264,52 @@ namespace DungeonDigger.UI.Controls
             {
                 foreach (var tile in _previousSelection)
                 {
-                    tile.Select();
+                    Select(tile);
                 }
             }
         }
 
-        public List<TileControl> GetSelectedTiles()
+        public List<TileStatus> GetSelectedTiles()
         {
             if (_selectedTiles == null)
             {
-                _selectedTiles = new List<TileControl>();
-                foreach (var element in MapGrid.Children)
+                _selectedTiles = new List<TileStatus>();
+                foreach (var tile in _tiles)
                 {
-                    if (element is TileControl tile && tile.Selected)
+                    if (tile.Selected)
                     {
                         _selectedTiles.Add(tile);
                     }
+
                 }
             }
 
             return _selectedTiles;
+        }
+
+        private void Select(TileStatus tile)
+        {
+            tile.Selected = true;
+            BitmapHelper.SelectTileSingleThread(_vm.TileBitmap, tile.X, tile.Y, UITilePixelSize);
+        }
+
+        private void DeSelect(TileStatus tile)
+        {
+            tile.Selected = false;
+            BitmapHelper.OverwriteTileSingleThread(_vm.TileBitmap, tile.Tile, tile.X, tile.Y, UITilePixelSize);
+        }
+
+        /// <summary>
+        /// Sets the new tile and updates the UI bitmap to show the updated tile.
+        /// </summary>
+        public void SetTile(TileStatus tile, Tile newTile)
+        {
+            tile.Tile = newTile;
+            BitmapHelper.OverwriteTileSingleThread(_vm.TileBitmap, tile.Tile, tile.X, tile.Y, UITilePixelSize);
+            if (tile.Selected)
+            {
+                Select(tile);
+            }
         }
 
         #region Events
@@ -311,5 +323,19 @@ namespace DungeonDigger.UI.Controls
             remove { RemoveHandler(AreaSelectionChangedEvent, value); }
         }
         #endregion
+
+        public class TileStatus
+        {
+            public Tile Tile { get; set; }
+            public bool Selected { get; set; }
+            public readonly int X;
+            public readonly int Y;
+
+            public TileStatus(int x, int y)
+            {
+                X = x;
+                Y = y;
+            }
+        }
     }
 }

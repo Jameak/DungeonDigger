@@ -1,23 +1,31 @@
 ﻿using System.Diagnostics;
+using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using DungeonDigger.Generation;
 
 namespace DungeonDigger.UI
 {
     public static class TileHelper
     {
-        public static ImageSource TileEmpty { get; }
-        public static ImageSource TileWall { get; }
-        public static ImageSource TileUnknown { get; }
+        public static BitmapImage TileEmpty { get; }
+        public static BitmapImage TileWall { get; }
+        public static BitmapImage TileUnknown { get; }
+        public static BitmapImage Selection { get; }
 
         static TileHelper()
         {
             TileEmpty = BitmapHelper.ConvertBitmapToImageSource(Properties.Resources.TileEmpty);
             TileWall = BitmapHelper.ConvertBitmapToImageSource(Properties.Resources.TileWall);
             TileUnknown = BitmapHelper.ConvertBitmapToImageSource(Properties.Resources.TileUnknown);
+            Selection = BitmapHelper.ConvertBitmapToImageSource(Properties.Resources.Selection);
+            TileEmpty.Freeze();
+            TileWall.Freeze();
+            TileUnknown.Freeze();
+            Selection.Freeze();
         }
 
-        public static ImageSource GetTileImage(Tile tile)
+        public static BitmapImage GetTileImage(Tile tile)
         {
             switch (tile)
             {
