@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -14,7 +17,6 @@ namespace DungeonDigger.UI.Controls
     public partial class MapControl : UserControl
     {
         private const double Epsilon = 0.0000001;
-        public const int UITilePixelSize = 16;
 
         private readonly MapControlViewModel _vm;
         private readonly TileStatus[,] _tiles;
@@ -33,7 +35,7 @@ namespace DungeonDigger.UI.Controls
             _vm = new MapControlViewModel();
             DataContext = _vm;
 
-            _vm.TileBitmap = new WriteableBitmap(BitmapHelper.CreateBitmap(map, UITilePixelSize));
+            _vm.TileBitmap = new WriteableBitmap(BitmapHelper.CreateBitmap(map, TileHelper.UI_MAP_TILE_PIXELSIZE));
 
             for (int x = 0; x < map.GetLength(0); x++)
             {
@@ -45,9 +47,9 @@ namespace DungeonDigger.UI.Controls
 
 
             //Set the startup size of the grid. This should be immediately overwritten by the SizeChanged event firing, but this ensures we have a valid startup configuration.
-            MapGrid.Width = map.GetLength(0) * UITilePixelSize;
-            MapGrid.Height = map.GetLength(1) * UITilePixelSize;
-            _tileWidth = UITilePixelSize;
+            MapGrid.Width = map.GetLength(0) * TileHelper.UI_MAP_TILE_PIXELSIZE;
+            MapGrid.Height = map.GetLength(1) * TileHelper.UI_MAP_TILE_PIXELSIZE;
+            _tileWidth = TileHelper.UI_MAP_TILE_PIXELSIZE;
 
             //When the control is resized, resize the internal grid to fill the available space without stretching.
             SizeChanged += (sender, args) =>
@@ -142,10 +144,23 @@ namespace DungeonDigger.UI.Controls
             //If a previous selection exists, then the user had pressed ctrl when the drag started, so cancel the current drag while keeping the previous selection.
             if (_previousSelection != null)
             {
-                foreach (var tile in _previousSelection)
+                var dirtyRects = new ConcurrentBag<Int32Rect>();
+                _vm.TileBitmap.Lock();
+
+                var ptr = _vm.TileBitmap.BackBuffer;
+                var stride = _vm.TileBitmap.BackBufferStride;
+
+                Parallel.ForEach(_previousSelection, tile =>
                 {
-                    Select(tile);
+                    var rect = Select(tile, ptr, stride);
+                    dirtyRects.Add(rect);
+                });
+                
+                foreach (var rect in dirtyRects)
+                {
+                    _vm.TileBitmap.AddDirtyRect(rect);
                 }
+                _vm.TileBitmap.Unlock();
             }
 
             RaiseEvent(new AreaSelectionChangedEvent(AreaSelectionChangedEvent, GetSelectedTiles().Count != 0));
@@ -153,13 +168,26 @@ namespace DungeonDigger.UI.Controls
 
         private void ResetSelection()
         {
-            for (int i = 0; i < _tiles.GetLength(0); i++)
+            var dirtyRects = new ConcurrentBag<Int32Rect>();
+            _vm.TileBitmap.Lock();
+            var ptr = _vm.TileBitmap.BackBuffer;
+            var stride = _vm.TileBitmap.BackBufferStride;
+
+            Parallel.For(0, _tiles.GetLength(0), i =>
             {
                 for (int j = 0; j < _tiles.GetLength(1); j++)
                 {
-                    DeSelect(_tiles[i,j]);
+                    var rect = DeSelect(_tiles[i,j], ptr, stride);
+                    dirtyRects.Add(rect);
                 }
+            });
+
+            foreach (var rect in dirtyRects)
+            {
+                _vm.TileBitmap.AddDirtyRect(rect);
             }
+            _vm.TileBitmap.Unlock();
+
             _selectedTiles = null;
         }
 
@@ -207,65 +235,153 @@ namespace DungeonDigger.UI.Controls
             {
                 if (minX > 0)
                 {
-                    for (int j = minY; j < maxY; j++)
+                    var dirtyRects = new ConcurrentBag<Int32Rect>();
+                    _vm.TileBitmap.Lock();
+                    var ptr = _vm.TileBitmap.BackBuffer;
+                    var stride = _vm.TileBitmap.BackBufferStride;
+
+                    Parallel.For(minY, maxY, j =>
                     {
-                        Select(_tiles[minX - 1, j]);
+                        var rect = Select(_tiles[minX - 1, j], ptr, stride);
+                        dirtyRects.Add(rect);
+                    });
+
+                    foreach (var rect in dirtyRects)
+                    {
+                        _vm.TileBitmap.AddDirtyRect(rect);
                     }
+
+                    _vm.TileBitmap.Unlock();
                 }
                 else
                 {
-                    for (int j = minY; j < maxY; j++)
+                    var dirtyRects = new ConcurrentBag<Int32Rect>();
+                    _vm.TileBitmap.Lock();
+                    var ptr = _vm.TileBitmap.BackBuffer;
+                    var stride = _vm.TileBitmap.BackBufferStride;
+
+                    Parallel.For(minY, maxY, j =>
                     {
-                        Select(_tiles[0, j]);
+                        var rect = Select(_tiles[0, j], ptr, stride);
+                        dirtyRects.Add(rect);
+                    });
+
+                    foreach (var rect in dirtyRects)
+                    {
+                        _vm.TileBitmap.AddDirtyRect(rect);
                     }
+
+                    _vm.TileBitmap.Unlock();
                 }
             }
             else if (minX != maxX && minY == maxY)
             {
                 if (minY > 0)
                 {
-                    for (int i = minX; i < maxX; i++)
+                    var dirtyRects = new ConcurrentBag<Int32Rect>();
+                    _vm.TileBitmap.Lock();
+                    var ptr = _vm.TileBitmap.BackBuffer;
+                    var stride = _vm.TileBitmap.BackBufferStride;
+
+                    Parallel.For(minX, maxX, i =>
                     {
-                        Select(_tiles[i, minY - 1]);
+                        var rect = Select(_tiles[i, minY - 1], ptr, stride);
+                        dirtyRects.Add(rect);
+                    });
+
+                    foreach (var rect in dirtyRects)
+                    {
+                        _vm.TileBitmap.AddDirtyRect(rect);
                     }
+
+                    _vm.TileBitmap.Unlock();
                 }
                 else
                 {
-                    for (int i = minX; i < maxX; i++)
+                    var dirtyRects = new ConcurrentBag<Int32Rect>();
+                    _vm.TileBitmap.Lock();
+                    var ptr = _vm.TileBitmap.BackBuffer;
+                    var stride = _vm.TileBitmap.BackBufferStride;
+
+                    Parallel.For(minX, maxX, i =>
                     {
-                        Select(_tiles[i, 0]);
+                        var rect = Select(_tiles[i, 0], ptr, stride);
+                        dirtyRects.Add(rect);
+                    });
+
+                    foreach (var rect in dirtyRects)
+                    {
+                        _vm.TileBitmap.AddDirtyRect(rect);
                     }
+
+                    _vm.TileBitmap.Unlock();
                 }
             }
             else if (minX == maxX && minY == maxY)
             {
                 if (minX > 0 && minY > 0)
                 {
-                    Select(_tiles[minX - 1, minY - 1]);
+                    _vm.TileBitmap.Lock();
+                    var ptr = _vm.TileBitmap.BackBuffer;
+                    var stride = _vm.TileBitmap.BackBufferStride;
+                    var dirtyRect = Select(_tiles[minX - 1, minY - 1], ptr, stride);
+                    _vm.TileBitmap.AddDirtyRect(dirtyRect);
+                    _vm.TileBitmap.Unlock();
                 }
                 else
                 {
-                    Select(_tiles[0, 0]);
+                    _vm.TileBitmap.Lock();
+                    var ptr = _vm.TileBitmap.BackBuffer;
+                    var stride = _vm.TileBitmap.BackBufferStride;
+                    var dirtyRect = Select(_tiles[0, 0], ptr, stride);
+                    _vm.TileBitmap.AddDirtyRect(dirtyRect);
+                    _vm.TileBitmap.Unlock();
                 }
             }
             else
             {
                 //Proper drag that spans multiple tiles in both the x- and y-axis
-                for (int i = minX; i < maxX; i++)
+                var dirtyRects = new ConcurrentBag<Int32Rect>();
+                _vm.TileBitmap.Lock();
+                var ptr = _vm.TileBitmap.BackBuffer;
+                var stride = _vm.TileBitmap.BackBufferStride;
+
+                Parallel.For(minX, maxX, i =>
                 {
                     for (int j = minY; j < maxY; j++)
                     {
-                        Select(_tiles[i, j]);
+                        var rect = Select(_tiles[i, j], ptr, stride);
+                        dirtyRects.Add(rect);
                     }
+                });
+
+                foreach (var rect in dirtyRects)
+                {
+                    _vm.TileBitmap.AddDirtyRect(rect);
                 }
+
+                _vm.TileBitmap.Unlock();
             }
 
             if ((Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && _previousSelection != null)
             {
-                foreach (var tile in _previousSelection)
+                var dirtyRects = new ConcurrentBag<Int32Rect>();
+                _vm.TileBitmap.Lock();
+                var ptr = _vm.TileBitmap.BackBuffer;
+                var stride = _vm.TileBitmap.BackBufferStride;
+
+                Parallel.ForEach(_previousSelection, tile =>
                 {
-                    Select(tile);
+                    var rect = Select(tile, ptr, stride);
+                    dirtyRects.Add(rect);
+                });
+                
+                foreach (var rect in dirtyRects)
+                {
+                    _vm.TileBitmap.AddDirtyRect(rect);
                 }
+
+                _vm.TileBitmap.Unlock();
             }
         }
 
@@ -287,29 +403,46 @@ namespace DungeonDigger.UI.Controls
             return _selectedTiles;
         }
 
-        private void Select(TileStatus tile)
+        private Int32Rect Select(TileStatus tile, IntPtr backBufferPtr, int backBufferStride)
         {
             tile.Selected = true;
-            BitmapHelper.SelectTileSingleThread(_vm.TileBitmap, tile.X, tile.Y, UITilePixelSize);
+            return BitmapHelper.SelectTile(backBufferPtr, backBufferStride, tile.X, tile.Y, TileHelper.UI_MAP_TILE_PIXELSIZE);
         }
 
-        private void DeSelect(TileStatus tile)
+        private Int32Rect DeSelect(TileStatus tile, IntPtr backBufferPtr, int backBufferStride)
         {
             tile.Selected = false;
-            BitmapHelper.OverwriteTileSingleThread(_vm.TileBitmap, tile.Tile, tile.X, tile.Y, UITilePixelSize);
+            return BitmapHelper.OverwriteTile(backBufferPtr, backBufferStride, tile.Tile, tile.X, tile.Y, TileHelper.UI_MAP_TILE_PIXELSIZE);
         }
 
         /// <summary>
-        /// Sets the new tile and updates the UI bitmap to show the updated tile.
+        /// Changes the given tiles to the specified tile and updates the UI bitmap to show the updated tiles.
         /// </summary>
-        public void SetTile(TileStatus tile, Tile newTile)
+        public void SetTile(IEnumerable<TileStatus> tiles, Tile newTile)
         {
-            tile.Tile = newTile;
-            BitmapHelper.OverwriteTileSingleThread(_vm.TileBitmap, tile.Tile, tile.X, tile.Y, UITilePixelSize);
-            if (tile.Selected)
+            var dirtyRects = new ConcurrentBag<Int32Rect>();
+            _vm.TileBitmap.Lock();
+            var ptr = _vm.TileBitmap.BackBuffer;
+            var stride = _vm.TileBitmap.BackBufferStride;
+
+            Parallel.ForEach(tiles, tile =>
             {
-                Select(tile);
+                tile.Tile = newTile;
+                var rect = BitmapHelper.OverwriteTile(ptr, stride, tile.Tile, tile.X, tile.Y, TileHelper.UI_MAP_TILE_PIXELSIZE);
+                dirtyRects.Add(rect);
+
+                if (tile.Selected)
+                {
+                    Select(tile, ptr, stride);
+                }
+            });
+
+            foreach (var rect in dirtyRects)
+            {
+                _vm.TileBitmap.AddDirtyRect(rect);
             }
+
+            _vm.TileBitmap.Unlock();
         }
 
         #region Events

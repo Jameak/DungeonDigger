@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -34,6 +35,8 @@ namespace DungeonDigger.UI
                 output.StreamSource = ms;
                 output.EndInit();
                 img.Dispose();
+
+                Debug.Assert(output.Format.BitsPerPixel == 32);
                 return output;
             }
         }
@@ -71,7 +74,7 @@ namespace DungeonDigger.UI
         /// </summary>
         /// <param name="map">The map for which to create an image</param>
         /// <param name="tileSize">The size of each tile</param>
-        /// <returns></returns>
+        /// <returns>The resulting bitmap</returns>
         public static BitmapSource CreateBitmap(Tile[,] map, int tileSize)
         {
             var width = map.GetLength(0) * tileSize;
@@ -84,112 +87,126 @@ namespace DungeonDigger.UI
             //Can only do this in parallel because the BitmapImage-instances returned by TileHelper.GetTileImage(...) are frozen.
             Parallel.For(0, map.GetLength(0), x =>
             {
-                    for (int y = 0; y < map.GetLength(1); y++)
+                for (int y = 0; y < map.GetLength(1); y++)
+                {
+                    //Offset for the pixel in the full image that corresponds to pixel (0,0) in the tile.
+                    var pixelOffset = (y * tileSize * width + x * tileSize) * imagedepth;
+
+                    var tuple = TileHelper.GetTilePixels(map[x, y], tileSize);
+                    var tilePixels = tuple.Item1;
+                    var pixelWidth = tuple.Item2;
+                    var pixelHeight = tuple.Item3;
+                    
+                    for (int tx = 0; tx < pixelWidth; tx++)
                     {
-                        //Offset for the pixel in the full image that corresponds to pixel (0,0) in the tile.
-                        var pixelOffset = (y * tileSize * width + x * tileSize) * imagedepth;
-
-                        var tile = TileHelper.GetTileImage(map[x, y]);
-                        //Scaled to our desired tile size.
-                        var tileImage = new TransformedBitmap(tile, new ScaleTransform(tileSize / (double)tile.PixelWidth, tileSize / (double)tile.PixelHeight));
-                        var tileStride = (tileImage.PixelWidth * pixelformat.BitsPerPixel + 7) / 8;
-                        var tilePixels = new byte[tileImage.PixelHeight * tileStride];
-                        tileImage.CopyPixels(tilePixels, tileStride, 0);
-
-                        for (int tx = 0; tx < tileImage.PixelWidth; tx++)
+                        for (int ty = 0; ty < pixelHeight; ty++)
                         {
-                            for (int ty = 0; ty < tileImage.PixelHeight; ty++)
-                            {
-                                //Offset on the full image for the position of the pixel
-                                var imageTileOffset = pixelOffset + (ty * width + tx) * imagedepth;
-                                //Offset on the tile image for the position of the pixel
-                                var tileOffset = (ty * tileImage.PixelWidth + tx) * imagedepth;
+                            //Offset on the full image for the position of the pixel
+                            var imageTileOffset = pixelOffset + (ty * width + tx) * imagedepth;
+                            //Offset on the tile image for the position of the pixel
+                            var tileOffset = (ty * pixelWidth + tx) * imagedepth;
 
-                                pixels[imageTileOffset + 0] = tilePixels[tileOffset + 0]; //B
-                                pixels[imageTileOffset + 1] = tilePixels[tileOffset + 1]; //G
-                                pixels[imageTileOffset + 2] = tilePixels[tileOffset + 2]; //R
-                                pixels[imageTileOffset + 3] = tilePixels[tileOffset + 3]; //A
-                            }
+                            pixels[imageTileOffset + 0] = tilePixels[tileOffset + 0]; //B
+                            pixels[imageTileOffset + 1] = tilePixels[tileOffset + 1]; //G
+                            pixels[imageTileOffset + 2] = tilePixels[tileOffset + 2]; //R
+                            pixels[imageTileOffset + 3] = tilePixels[tileOffset + 3]; //A
                         }
                     }
+                }
             });
             
             var image = BitmapSource.Create(width, height, 96, 96, PixelFormats.Pbgra32, null, pixels, stride);
+            Debug.Assert(image.Format.BitsPerPixel == 32);
             return image;
         }
 
         /// <summary>
         /// Overlay the image representing a selection on top of the specified tile, letting the tile poke through where the selection-image is transparent.
-        /// Use <see cref="OverwriteTileSingleThread"/> to deselect a tile.
+        /// Use <see cref="OverwriteTile"/> to deselect a tile.
         /// </summary>
-        /// <param name="image">The image to select a tile on</param>
+        /// <param name="backBufferPtr">A pointer to the backbuffer of the WriteableBitmap. See <see cref="WriteableBitmap.BackBuffer"/></param>
+        /// <param name="backBufferStride">The stride of the backbuffer of the WriteableBitmap. See <see cref="WriteableBitmap.BackBufferStride"/></param>
         /// <param name="x">The x-coordinate of the tile. Zero-indexed</param>
         /// <param name="y">The y-coordinate of the tile. Zero-indexed</param>
         /// <param name="tileSize">The number of pixels that the side of one tile is. MUST be identical to the tilesize used to create the image.</param>
-        public static void SelectTileSingleThread(WriteableBitmap image, int x, int y, int tileSize)
+        /// <returns>A rectangle specifing the dirty rectangle that has to be updated.</returns>
+        public static unsafe Int32Rect SelectTile(IntPtr backBufferPtr, int backBufferStride, int x, int y, int tileSize)
         {
-            var imagedepth = (image.Format.BitsPerPixel + 7) / 8;
-            var tileStride = (tileSize * image.Format.BitsPerPixel + 7) / 8;
-            var tilePixels = new byte[tileSize * tileStride];
-            var sourceRect = new Int32Rect(x * tileSize, y * tileSize, tileSize, tileSize);
-            image.CopyPixels(sourceRect, tilePixels, tileStride, 0); //The 'offset' parameter is the offset into the tilePixels-array, NOT into the actual image.
-            
-            //Grab the image we're using to show that a tile has been selected
-            var selectionImage = TileHelper.Selection;
-            Debug.Assert(image.Format.BitsPerPixel == selectionImage.Format.BitsPerPixel, "Number of bits per pixel of selection image doesn't match.");
-            //Scaled to our desired tile size.
-            var scaledSelection = new TransformedBitmap(selectionImage, new ScaleTransform(tileSize / (double)selectionImage.PixelWidth, tileSize / (double)selectionImage.PixelHeight));
-            var selectionStride = (scaledSelection.PixelWidth * scaledSelection.Format.BitsPerPixel + 7) / 8;
-            var selectionPixels = new byte[scaledSelection.PixelHeight * selectionStride];
-            scaledSelection.CopyPixels(selectionPixels, selectionStride, 0);
-            
-            Debug.Assert(tileStride == selectionStride, "Strides of tile in given image and selection image must be identical.");
-            Debug.Assert(tilePixels.Length == selectionPixels.Length, "The size of the tile-array is different from the selection-array.");
-
-            //Only use the non-transparent pixels from the selection, by leaving the tile-pixels intact where the selection is transparent.
-            for (int i = 0; i < tileSize; i++)
+            byte[] selectionPixels;
+            TileHelper.Colour[] selectionColours;
+            int pixelWidth;
+            int pixelHeight;
+            if (tileSize != TileHelper.UI_MAP_TILE_PIXELSIZE)
             {
-                for (int j = 0; j < tileSize; j++)
+                //We have to scale the tile to the desired size.
+                var selectionImage = TileHelper.Selection;
+                var scaled = new TransformedBitmap(selectionImage,
+                    new ScaleTransform(tileSize / (double) selectionImage.PixelWidth, tileSize / (double) selectionImage.PixelHeight));
+                selectionPixels = TileHelper.CopyPixels(scaled);
+                selectionColours = TileHelper.ConvertToColour(selectionPixels);
+                pixelWidth = scaled.PixelWidth;
+                pixelHeight = scaled.PixelHeight;
+            }
+            else
+            {
+                //We can use our precomputed values.
+                var tuple = TileHelper.SelectionPixels;
+                selectionPixels = tuple.Item1;
+                selectionColours = TileHelper.SelectionColours.Item1;
+                pixelWidth = tuple.Item2;
+                pixelHeight = tuple.Item3;
+            }
+            
+            //Only use the non-transparent pixels from the selection, by leaving the tile-pixels intact where the selection is transparent.
+            for (int i = 0; i < pixelWidth; i++)
+            {
+                for (int j = 0; j < pixelHeight; j++)
                 {
-                    var offset = (j * scaledSelection.PixelWidth + i) * imagedepth;
+                    var offset = (j * pixelWidth + i) * 4; // Image depth is 4
+                    var offsetColour = j * pixelWidth + i; //Offset into the array of Colour-values
 
                     var selectAlpha = selectionPixels[offset + 3];
                     if (selectAlpha != 0) //The pixel is not transparent
                     {
-                        tilePixels[offset + 0] = selectionPixels[offset + 0];
-                        tilePixels[offset + 1] = selectionPixels[offset + 1];
-                        tilePixels[offset + 2] = selectionPixels[offset + 2];
-                        tilePixels[offset + 3] = selectionPixels[offset + 3];
+                        // The location of a pixel in the backbuffer is: bmp.BackBuffer + (bmp.BackBufferStride * Y) + X * (bmp.Format.BitsPerPixel / 8)
+                        var ptr = (TileHelper.Colour*) (backBufferPtr + (y * tileSize + j) * backBufferStride + (x * tileSize + i) * 4);
+                        *ptr = selectionColours[offsetColour];
                     }
                 }
             }
-
-            image.WritePixels(sourceRect, tilePixels, selectionStride, 0); //The 'offset' parameter is the offset into the tilePixels-array, NOT into the actual image.
+            
+            return new Int32Rect(x * tileSize, y * tileSize, tileSize, tileSize);
         }
-
+        
         /// <summary>
         /// Overlay the tile-image on the given image, at position x, y.
         /// </summary>
-        /// <param name="image">The image to set a tile on</param>
+        /// <param name="backBufferPtr">A pointer to the backbuffer of the WriteableBitmap. See <see cref="WriteableBitmap.BackBuffer"/></param>
+        /// <param name="backBufferStride">The stride of the backbuffer of the WriteableBitmap. See <see cref="WriteableBitmap.BackBufferStride"/></param>
         /// <param name="tile">The tile to place on the image</param>
         /// <param name="x">The x-coordinate of the tile. Zero-indexed</param>
         /// <param name="y">The y-coordinate of the tile. Zero-indexed</param>
         /// <param name="tileSize">The number of pixels that the side of one tile is. MUST be identical to the tilesize used to create the image.</param>
-        public static void OverwriteTileSingleThread(WriteableBitmap image, Tile tile, int x, int y, int tileSize)
+        /// <returns>A rectangle specifing the dirty rectangle that has to be updated.</returns>
+        public static unsafe Int32Rect OverwriteTile(IntPtr backBufferPtr, int backBufferStride, Tile tile, int x, int y, int tileSize)
         {
-            //The tilesize given here MUST match the tilesize used to create the image originally.
-            var sourceRect = new Int32Rect(x * tileSize, y * tileSize, tileSize, tileSize);
+            var tuple = TileHelper.GetTileColours(tile, tileSize);
+            var tileColours = tuple.Item1;
+            var pixelWidth = tuple.Item2;
+            var pixelHeight = tuple.Item3;
+            
+            for (int j = 0; j < pixelHeight; j++)
+            {
+                // The location of a pixel in the backbuffer is: bmp.BackBuffer + (bmp.BackBufferStride * Y) + X * (bmp.Format.BitsPerPixel / 8)
+                var ptr = (TileHelper.Colour*)(backBufferPtr + (y * tileSize + j) * backBufferStride + x * tileSize * 4);
+                var offset = j * pixelWidth;
+                for (int i = 0; i < pixelWidth; i++, ptr++, offset++)
+                {
+                    *ptr = tileColours[offset];
+                }
+            }
 
-            //Grab the original, non-selected, image of the tile.
-            var tileImage = TileHelper.GetTileImage(tile);
-            Debug.Assert(image.Format.BitsPerPixel == tileImage.Format.BitsPerPixel, "Number of bits per pixel of new tile image doesn't match.");
-            //Scaled to our desired tile size.
-            var scaledTile = new TransformedBitmap(tileImage, new ScaleTransform(tileSize / (double) tileImage.PixelWidth, tileSize / (double) tileImage.PixelHeight));
-            var tileStride = (scaledTile.PixelWidth * scaledTile.Format.BitsPerPixel + 7) / 8;
-            var tilePixels = new byte[scaledTile.PixelHeight * tileStride];
-            scaledTile.CopyPixels(tilePixels, tileStride, 0);
-
-            image.WritePixels(sourceRect, tilePixels, tileStride, 0); //The 'offset' parameter is the offset into the tilePixels-array, NOT the actual image.
+            return new Int32Rect(x * tileSize, y * tileSize, tileSize, tileSize);
         }
     }
 }

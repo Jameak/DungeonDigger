@@ -53,10 +53,7 @@ namespace DungeonDigger.UI.Windows
         private void MapCustomizerControl_OnTileChanged(object sender, RoutedEventArgs e)
         {
             var arg = (ChangeTileEvent) e;
-            foreach (var selectedTile in _map.GetSelectedTiles())
-            {
-                _map.SetTile(selectedTile, arg.TileInfo.Tile);
-            }
+            _map.SetTile(_map.GetSelectedTiles(), arg.TileInfo.Tile);
         }
 
         private void MapControl_OnAreaSelectionChanged(object sender, RoutedEventArgs e)
