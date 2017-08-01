@@ -73,9 +73,69 @@ namespace DungeonDigger.UI.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap TileDoor {
+            get {
+                object obj = ResourceManager.GetObject("TileDoor", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap TileDoorOpen {
+            get {
+                object obj = ResourceManager.GetObject("TileDoorOpen", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap TileEmpty {
             get {
                 object obj = ResourceManager.GetObject("TileEmpty", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap TileSecret {
+            get {
+                object obj = ResourceManager.GetObject("TileSecret", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap TileStairPart_One {
+            get {
+                object obj = ResourceManager.GetObject("TileStairPart_One", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap TileStairPart_Two {
+            get {
+                object obj = ResourceManager.GetObject("TileStairPart_Two", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap TileStairSingle {
+            get {
+                object obj = ResourceManager.GetObject("TileStairSingle", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -91,11 +91,8 @@ namespace DungeonDigger.Generation
                 case Symbol.Wall:
                     return Tile.Wall;
                 case Symbol.DoorLeft:
-                    return Tile.DoorClosed;
                 case Symbol.DoorRight:
-                    return Tile.DoorClosed;
                 case Symbol.DoorTop:
-                    return Tile.DoorClosed;
                 case Symbol.DoorBottom:
                     return Tile.DoorClosed;
                 case Symbol.StairDown:
@@ -103,9 +100,9 @@ namespace DungeonDigger.Generation
                 case Symbol.StairDownDown:
                     return Tile.StairPartTwo;
                 case Symbol.StairUp:
-                    return Tile.Stair;
+                    return Tile.StairPartTwo;
                 case Symbol.StairUpUp:
-                    return Tile.Stair;
+                    return Tile.StairPartOne;
                 default:
                     return Tile.Unknown;
             }

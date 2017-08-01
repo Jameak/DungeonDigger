@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DungeonDigger.Generation
+﻿namespace DungeonDigger.Generation
 {
     public enum Tile
     {
@@ -12,7 +6,8 @@ namespace DungeonDigger.Generation
         Wall,
         Room,
         Hallway,
-        Stair,
+        StairUp,
+        StairDown,
         StairPartOne,
         StairPartTwo,
         DoorClosed,

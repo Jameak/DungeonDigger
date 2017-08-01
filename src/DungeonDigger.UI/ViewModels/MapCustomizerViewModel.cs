@@ -16,8 +16,10 @@ namespace DungeonDigger.UI.ViewModels
 
         public MapCustomizerViewModel()
         {
-            foreach (var tile in Enum.GetValues(typeof(Tile)).Cast<Tile>())
+            foreach (var tile in Enum.GetValues(typeof(UITile)).Cast<UITile>())
             {
+                if(tile == UITile.Unknown) continue;
+
                 TileChoices.Add(new TileInfo
                 {
                     Image = TileHelper.GetTileImage(tile),
@@ -31,7 +33,7 @@ namespace DungeonDigger.UI.ViewModels
         {
             public ImageSource Image { get; set; }
             public string Name { get; set; }
-            public Tile Tile { get; set; }
+            public UITile Tile { get; set; }
         }
     }
 }

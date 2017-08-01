@@ -27,7 +27,7 @@ namespace DungeonDigger.UI.Windows
                 MainGrid.Children.Remove(_map);
             }
 
-            _map = new MapControl(tiles);
+            _map = new MapControl(TileHelper.Convert(tiles));
             _map.AreaSelectionChanged += MapControl_OnAreaSelectionChanged;
 
             Grid.SetColumn(_map, 0);

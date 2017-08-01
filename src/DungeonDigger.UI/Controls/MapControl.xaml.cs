@@ -28,7 +28,7 @@ namespace DungeonDigger.UI.Controls
 
         public BitmapSource UIImage => _vm.TileBitmap;
         
-        public MapControl(Tile[,] map)
+        public MapControl(UITile[,] map)
         {
             InitializeComponent();
             _tiles = new TileStatus[map.GetLength(0),map.GetLength(1)];
@@ -418,7 +418,7 @@ namespace DungeonDigger.UI.Controls
         /// <summary>
         /// Changes the given tiles to the specified tile and updates the UI bitmap to show the updated tiles.
         /// </summary>
-        public void SetTile(IEnumerable<TileStatus> tiles, Tile newTile)
+        public void SetTile(IEnumerable<TileStatus> tiles, UITile newTile)
         {
             var dirtyRects = new ConcurrentBag<Int32Rect>();
             _vm.TileBitmap.Lock();
@@ -459,7 +459,7 @@ namespace DungeonDigger.UI.Controls
 
         public class TileStatus
         {
-            public Tile Tile { get; set; }
+            public UITile Tile { get; set; }
             public bool Selected { get; set; }
             public readonly int X;
             public readonly int Y;

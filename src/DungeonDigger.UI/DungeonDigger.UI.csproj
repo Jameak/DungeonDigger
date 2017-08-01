@@ -68,6 +68,7 @@
     <Compile Include="Events\ChangeTileEvent.cs" />
     <Compile Include="Events\MapGeneratedEvent.cs" />
     <Compile Include="TileHelper.cs" />
+    <Compile Include="UITiles.cs" />
     <Compile Include="ViewModels\Base\BaseViewModel.cs" />
     <Compile Include="ViewModels\GenerationControlViewModel.cs" />
     <Compile Include="ViewModels\MapControlViewModel.cs" />
@@ -143,6 +144,24 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\TileWall.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TileDoor.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TileSecret.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TileStairPart_One.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TileStairPart_Two.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TileStairSingle.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\TileDoorOpen.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

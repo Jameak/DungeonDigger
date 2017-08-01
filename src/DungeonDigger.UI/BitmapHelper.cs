@@ -75,7 +75,7 @@ namespace DungeonDigger.UI
         /// <param name="map">The map for which to create an image</param>
         /// <param name="tileSize">The size of each tile</param>
         /// <returns>The resulting bitmap</returns>
-        public static BitmapSource CreateBitmap(Tile[,] map, int tileSize)
+        public static BitmapSource CreateBitmap(UITile[,] map, int tileSize)
         {
             var width = map.GetLength(0) * tileSize;
             var height = map.GetLength(1) * tileSize;
@@ -92,10 +92,10 @@ namespace DungeonDigger.UI
                     //Offset for the pixel in the full image that corresponds to pixel (0,0) in the tile.
                     var pixelOffset = (y * tileSize * width + x * tileSize) * imagedepth;
 
-                    var tuple = TileHelper.GetTilePixels(map[x, y], tileSize);
-                    var tilePixels = tuple.Item1;
-                    var pixelWidth = tuple.Item2;
-                    var pixelHeight = tuple.Item3;
+                    var imageData = TileHelper.GetTilePixels(map[x, y], tileSize);
+                    var tilePixels = imageData.Data;
+                    var pixelWidth = imageData.Width;
+                    var pixelHeight = imageData.Height;
                     
                     for (int tx = 0; tx < pixelWidth; tx++)
                     {
@@ -150,11 +150,11 @@ namespace DungeonDigger.UI
             else
             {
                 //We can use our precomputed values.
-                var tuple = TileHelper.SelectionPixels;
-                selectionPixels = tuple.Item1;
-                selectionColours = TileHelper.SelectionColours.Item1;
-                pixelWidth = tuple.Item2;
-                pixelHeight = tuple.Item3;
+                var imageData = TileHelper.SelectionPixels;
+                selectionPixels = imageData.Data;
+                selectionColours = TileHelper.SelectionColours.Data;
+                pixelWidth = imageData.Width;
+                pixelHeight = imageData.Height;
             }
             
             //Only use the non-transparent pixels from the selection, by leaving the tile-pixels intact where the selection is transparent.
@@ -188,12 +188,12 @@ namespace DungeonDigger.UI
         /// <param name="y">The y-coordinate of the tile. Zero-indexed</param>
         /// <param name="tileSize">The number of pixels that the side of one tile is. MUST be identical to the tilesize used to create the image.</param>
         /// <returns>A rectangle specifing the dirty rectangle that has to be updated.</returns>
-        public static unsafe Int32Rect OverwriteTile(IntPtr backBufferPtr, int backBufferStride, Tile tile, int x, int y, int tileSize)
+        public static unsafe Int32Rect OverwriteTile(IntPtr backBufferPtr, int backBufferStride, UITile tile, int x, int y, int tileSize)
         {
-            var tuple = TileHelper.GetTileColours(tile, tileSize);
-            var tileColours = tuple.Item1;
-            var pixelWidth = tuple.Item2;
-            var pixelHeight = tuple.Item3;
+            var imageData = TileHelper.GetTileColours(tile, tileSize);
+            var tileColours = imageData.Data;
+            var pixelWidth = imageData.Width;
+            var pixelHeight = imageData.Height;
             
             for (int j = 0; j < pixelHeight; j++)
             {
