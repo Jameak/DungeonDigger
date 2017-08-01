@@ -403,6 +403,17 @@ namespace DungeonDigger.UI.Controls
             return _selectedTiles;
         }
 
+        public UITile[,] GetMapTiles()
+        {
+            var map = new UITile[_tiles.GetLength(0),_tiles.GetLength(1)];
+            foreach (var tileStatus in _tiles)
+            {
+                map[tileStatus.X, tileStatus.Y] = tileStatus.Tile;
+            }
+
+            return map;
+        }
+
         private Int32Rect Select(TileStatus tile, IntPtr backBufferPtr, int backBufferStride)
         {
             tile.Selected = true;

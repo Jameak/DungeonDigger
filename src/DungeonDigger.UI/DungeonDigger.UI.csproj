@@ -73,6 +73,9 @@
     <Compile Include="ViewModels\GenerationControlViewModel.cs" />
     <Compile Include="ViewModels\MapControlViewModel.cs" />
     <Compile Include="ViewModels\MapCustomizerViewModel.cs" />
+    <Compile Include="Windows\SaveOptionsWindow.xaml.cs">
+      <DependentUpon>SaveOptionsWindow.xaml</DependentUpon>
+    </Compile>
     <Page Include="Controls\GenerationControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -100,6 +103,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Windows\SaveOptionsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

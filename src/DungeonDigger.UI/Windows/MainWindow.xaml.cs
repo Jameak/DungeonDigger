@@ -12,6 +12,7 @@ namespace DungeonDigger.UI.Windows
     public partial class MainWindow : Window
     {
         private MapControl _map;
+        private SaveOptionsWindow _saveWindow;
 
         public MainWindow()
         {
@@ -33,6 +34,8 @@ namespace DungeonDigger.UI.Windows
             Grid.SetColumn(_map, 0);
             Grid.SetRow(_map, 0);
             MainGrid.Children.Add(_map);
+
+            if (_saveWindow != null) _saveWindow.Map = _map;
         }
 
         private static Tile[,] TempCreateMap()
@@ -98,21 +101,21 @@ namespace DungeonDigger.UI.Windows
 
         private void MenuItemSaveMap_OnClick(object sender, RoutedEventArgs e)
         {
-            var dialog = new Microsoft.Win32.SaveFileDialog
+            if (_saveWindow == null)
             {
-                Title = "Choose save location",
-                FileName = "dungeon",
-                DefaultExt = ".png",
-                AddExtension = true,
-                Filter = "All Files|*.*"
-            };
+                _saveWindow = new SaveOptionsWindow
+                {
+                    Owner = this,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Map = _map,
+                };
 
-            var result = dialog.ShowDialog();
-
-            if (result != null && result.Value)
+                _saveWindow.Show();
+                _saveWindow.Closed += (o, args) => _saveWindow = null;
+            }
+            else
             {
-                if (!dialog.FileName.EndsWith(".png")) dialog.FileName = dialog.FileName + ".png";
-                BitmapHelper.SaveBitmapSource(_map.UIImage, dialog.FileName);
+                _saveWindow.Focus();
             }
         }
     }
