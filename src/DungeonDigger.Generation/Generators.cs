@@ -10,7 +10,8 @@ namespace DungeonDigger.Generation
         {
             CreateGen("Test Generator", d => new TestGenerator(d), TestGenerator.Options),
             CreateGen("Test Gen 2", d => new TestGenerator(d), TestGenerator.Options),
-            CreateGen("Gaussian", d => new Gauss(d), Gauss.Options)
+            CreateGen("Gaussian", d => new Gauss(d), Gauss.Options),
+            CreateGen("Elimination", d => new Elimination(d), Elimination.Options)
         };
 
         private static Tuple<string, Func<IDictionary<string, object>, IGenerator>, IReadOnlyList<GeneratorOption>> CreateGen(string label, Func<IDictionary<string, object>, IGenerator> func, IReadOnlyList<GeneratorOption> options)
