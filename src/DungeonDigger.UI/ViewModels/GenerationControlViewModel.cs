@@ -15,7 +15,7 @@ namespace DungeonDigger.UI.ViewModels
 
         public GenerationControlViewModel()
         {
-            foreach (Tuple<string, Func<IDictionary<string, object>, IGenerator>, IReadOnlyList<GeneratorOption>> generator in Generation.Generators.BuiltinGenerators)
+            foreach (var generator in Generation.Generators.BuiltinGenerators)
             {
                 Generators.Add(new GeneratorEntry
                 {

@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using DungeonDigger.UI.Controls;
@@ -100,16 +101,19 @@ namespace DungeonDigger.UI.Windows
 
         private void SizeCustomTextBox_OnPreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            int num;
-            e.Handled = !int.TryParse(e.Text, out num);
+            e.Handled = !int.TryParse(e.Text, out int _);
         }
 
         private void SizeCustomTextBox_OnPasting(object sender, DataObjectPastingEventArgs e)
         {
             if (e.DataObject.GetDataPresent(typeof(string)))
             {
-                int num;
-                if (!int.TryParse((string)e.DataObject.GetData(typeof(string)), out num))
+                if (((string)e.DataObject.GetData(typeof(string))).Contains('-'))
+                {
+                    e.CancelCommand();
+                }
+
+                if (!int.TryParse((string)e.DataObject.GetData(typeof(string)), out int _))
                 {
                     e.CancelCommand();
                 }

@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using DungeonDigger.Generation;
@@ -17,7 +20,27 @@ namespace DungeonDigger.UI.Windows
         public MainWindow()
         {
             InitializeComponent();
-            SetMap(TempCreateMap());
+            GenerateDefaultMap();
+        }
+
+        private async void GenerateDefaultMap()
+        {
+            var gen = Generators.BuiltinGenerators.FirstOrDefault();
+            if (gen == null) return;
+
+            var options = new Dictionary<string, object>();
+            foreach (var option in gen.Item3)
+            {
+                options.Add(option.Key, option.DefaultContent);
+            }
+
+            var map = await Task.Run(() =>
+            {
+                var generator = gen.Item2.Invoke(options);
+                return generator.Construct();
+            });
+            
+            SetMap(map);
         }
 
         private void SetMap(Tile[,] tiles)
@@ -36,21 +59,6 @@ namespace DungeonDigger.UI.Windows
             MainGrid.Children.Add(_map);
 
             if (_saveWindow != null) _saveWindow.Map = _map;
-        }
-
-        private static Tile[,] TempCreateMap()
-        {
-            var rand = new Random();
-
-            var locs = new Tile[rand.Next(5,40),rand.Next(5,40)];
-            for (int i = 0; i < locs.GetLength(0); i++)
-            {
-                for (int j = 0; j < locs.GetLength(1); j++)
-                {
-                    locs[i,j] = (j + i) % rand.Next(1,5) == 0 ? Tile.Room : Tile.Wall;
-                }
-            }
-            return locs;
         }
 
         private void MapCustomizerControl_OnTileChanged(object sender, RoutedEventArgs e)

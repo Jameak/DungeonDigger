@@ -44,8 +44,10 @@ namespace DungeonDigger.UI.Controls
                 var rd = new RowDefinition();
                 rd.Height = GridLength.Auto;
                 OptionGrid.RowDefinitions.Add(rd);
+                var margin = new Thickness(1.5);
                 var block = new TextBlock();
                 block.Text = option.Label;
+                block.Margin = margin;
                 Grid.SetColumn(block, 0);
                 Grid.SetRow(block, index);
                 OptionGrid.Children.Add(block);
@@ -55,6 +57,7 @@ namespace DungeonDigger.UI.Controls
                         var textfield = new TextBoxOption();
                         textfield.Key = option.Key;
                         textfield.Text = option.DefaultContent;
+                        textfield.Margin = margin;
                         Grid.SetColumn(textfield, 1);
                         Grid.SetRow(textfield, index);
                         OptionGrid.Children.Add(textfield);
@@ -63,6 +66,7 @@ namespace DungeonDigger.UI.Controls
                         var combobox = new ComboBoxOption();
                         combobox.Key = option.Key;
                         combobox.ItemsSource = ComboBoxTupleSource.CreateSource(option.ControlOptions);
+                        combobox.Margin = margin;
                         if (option.DefaultContent != null && int.TryParse(option.DefaultContent, out int defaultIndex))
                         {
                             combobox.SelectedIndex = defaultIndex;
@@ -76,6 +80,7 @@ namespace DungeonDigger.UI.Controls
                         var checkbox = new CheckBoxOption();
                         checkbox.Key = option.Key;
                         checkbox.Content = option.Label;
+                        checkbox.Margin = margin;
                         if (bool.TryParse(option.DefaultContent, out bool defaultValue))
                         {
                             checkbox.IsChecked = defaultValue;
@@ -85,9 +90,10 @@ namespace DungeonDigger.UI.Controls
                         OptionGrid.Children.Add(checkbox);
                         break;
                     case GeneratorOption.ControlType.IntegerField:
-                        var intField = new TextBoxOption();
+                        var intField = new IntegerBoxOption();
                         intField.Key = option.Key;
                         intField.Text = option.DefaultContent;
+                        intField.Margin = margin;
                         Grid.SetColumn(intField, 1);
                         Grid.SetRow(intField, index);
                         OptionGrid.Children.Add(intField);
@@ -113,13 +119,40 @@ namespace DungeonDigger.UI.Controls
                 }
             }
 
+            ConstructButton.IsEnabled = false;
             var map = await Task.Run(() =>
             {
                 var generator = selectedGen.Func.Invoke(options);
                 return generator.Construct();
             });
+            ConstructButton.IsEnabled = true;
 
             RaiseEvent(new MapGeneratedEvent(MapGeneratedEvent, map));
+        }
+
+        private static void ContrainPreviewToInt(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !int.TryParse(e.Text, out int _);
+        }
+
+        private static void ContrainPasteToInt(object sender, DataObjectPastingEventArgs e)
+        {
+            if (e.DataObject.GetDataPresent(typeof(string)))
+            {
+                if (((string) e.DataObject.GetData(typeof(string))).Contains('-'))
+                {
+                    e.CancelCommand();
+                }
+
+                if (!int.TryParse((string)e.DataObject.GetData(typeof(string)), out int _))
+                {
+                    e.CancelCommand();
+                }
+            }
+            else
+            {
+                e.CancelCommand();
+            }
         }
 
         #region Events
@@ -161,6 +194,27 @@ namespace DungeonDigger.UI.Controls
         {
             public string Key { get; set; }
             public object Value => Text;
+        }
+
+        private class IntegerBoxOption : TextBox, IOption
+        {
+            public string Key { get; set; }
+            public object Value => string.IsNullOrEmpty(Text) ? "1" : Text;
+
+            public IntegerBoxOption() : base()
+            {
+                Loaded += (sender, args) =>
+                {
+                    PreviewTextInput += ContrainPreviewToInt;
+                    DataObject.AddPastingHandler(this, ContrainPasteToInt);
+                };
+
+                Unloaded += (sender, args) =>
+                {
+                    PreviewTextInput -= ContrainPreviewToInt;
+                    DataObject.RemovePastingHandler(this, ContrainPasteToInt);
+                };
+            }
         }
 
         private class ComboBoxOption : ComboBox, IOption

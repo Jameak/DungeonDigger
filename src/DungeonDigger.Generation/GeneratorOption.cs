@@ -31,7 +31,7 @@ namespace DungeonDigger.Generation
 
         /// <summary>
         /// The default content of the control.
-        /// For ControlType.Checkbox, use bool.TrueString or bool.FalseString
+        /// For ControlType.Checkbox, use bool.TrueString or bool.FalseString.
         /// For Dropdown, specify the index as a string. E.g. "0"
         /// </summary>
         public string DefaultContent { get; internal set; }
