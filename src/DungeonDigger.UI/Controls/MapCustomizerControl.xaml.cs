@@ -45,8 +45,8 @@ namespace DungeonDigger.UI.Controls
 
         public event RoutedEventHandler TileChanged
         {
-            add { AddHandler(TileChangedEvent, value); }
-            remove { RemoveHandler(TileChangedEvent, value); }
+            add => AddHandler(TileChangedEvent, value);
+            remove => RemoveHandler(TileChangedEvent, value);
         }
         #endregion
 

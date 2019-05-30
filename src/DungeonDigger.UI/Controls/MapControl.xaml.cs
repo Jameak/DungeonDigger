@@ -227,6 +227,11 @@ namespace DungeonDigger.UI.Controls
             //Due to floating point imprecision when the control is resized to fit the size of the screen, there is a minor chance that the calculated index will be barely outside of the area, so to be safe we clamp it here.
             if (maxX > _tiles.GetLength(0)) maxX = _tiles.GetLength(0);
             if (maxY > _tiles.GetLength(1)) maxY = _tiles.GetLength(1);
+            
+            var dirtyRects = new ConcurrentBag<Int32Rect>();
+            _vm.TileBitmap.Lock();
+            var ptr = _vm.TileBitmap.BackBuffer;
+            var stride = _vm.TileBitmap.BackBufferStride;
 
             //Rounding might cause us to get indexes with the same value, which we still want to mark as a selection.
             //This rounding will cause the index to be larger than required, so subtract 1 when using the index directly.
@@ -235,117 +240,54 @@ namespace DungeonDigger.UI.Controls
             {
                 if (minX > 0)
                 {
-                    var dirtyRects = new ConcurrentBag<Int32Rect>();
-                    _vm.TileBitmap.Lock();
-                    var ptr = _vm.TileBitmap.BackBuffer;
-                    var stride = _vm.TileBitmap.BackBufferStride;
-
                     Parallel.For(minY, maxY, j =>
                     {
                         var rect = Select(_tiles[minX - 1, j], ptr, stride);
                         dirtyRects.Add(rect);
                     });
-
-                    foreach (var rect in dirtyRects)
-                    {
-                        _vm.TileBitmap.AddDirtyRect(rect);
-                    }
-
-                    _vm.TileBitmap.Unlock();
                 }
                 else
                 {
-                    var dirtyRects = new ConcurrentBag<Int32Rect>();
-                    _vm.TileBitmap.Lock();
-                    var ptr = _vm.TileBitmap.BackBuffer;
-                    var stride = _vm.TileBitmap.BackBufferStride;
-
                     Parallel.For(minY, maxY, j =>
                     {
                         var rect = Select(_tiles[0, j], ptr, stride);
                         dirtyRects.Add(rect);
                     });
-
-                    foreach (var rect in dirtyRects)
-                    {
-                        _vm.TileBitmap.AddDirtyRect(rect);
-                    }
-
-                    _vm.TileBitmap.Unlock();
                 }
             }
             else if (minX != maxX && minY == maxY)
             {
                 if (minY > 0)
                 {
-                    var dirtyRects = new ConcurrentBag<Int32Rect>();
-                    _vm.TileBitmap.Lock();
-                    var ptr = _vm.TileBitmap.BackBuffer;
-                    var stride = _vm.TileBitmap.BackBufferStride;
-
                     Parallel.For(minX, maxX, i =>
                     {
                         var rect = Select(_tiles[i, minY - 1], ptr, stride);
                         dirtyRects.Add(rect);
                     });
-
-                    foreach (var rect in dirtyRects)
-                    {
-                        _vm.TileBitmap.AddDirtyRect(rect);
-                    }
-
-                    _vm.TileBitmap.Unlock();
                 }
                 else
                 {
-                    var dirtyRects = new ConcurrentBag<Int32Rect>();
-                    _vm.TileBitmap.Lock();
-                    var ptr = _vm.TileBitmap.BackBuffer;
-                    var stride = _vm.TileBitmap.BackBufferStride;
-
                     Parallel.For(minX, maxX, i =>
                     {
                         var rect = Select(_tiles[i, 0], ptr, stride);
                         dirtyRects.Add(rect);
                     });
-
-                    foreach (var rect in dirtyRects)
-                    {
-                        _vm.TileBitmap.AddDirtyRect(rect);
-                    }
-
-                    _vm.TileBitmap.Unlock();
                 }
             }
             else if (minX == maxX && minY == maxY)
             {
                 if (minX > 0 && minY > 0)
                 {
-                    _vm.TileBitmap.Lock();
-                    var ptr = _vm.TileBitmap.BackBuffer;
-                    var stride = _vm.TileBitmap.BackBufferStride;
-                    var dirtyRect = Select(_tiles[minX - 1, minY - 1], ptr, stride);
-                    _vm.TileBitmap.AddDirtyRect(dirtyRect);
-                    _vm.TileBitmap.Unlock();
+                    dirtyRects.Add(Select(_tiles[minX - 1, minY - 1], ptr, stride));
                 }
                 else
                 {
-                    _vm.TileBitmap.Lock();
-                    var ptr = _vm.TileBitmap.BackBuffer;
-                    var stride = _vm.TileBitmap.BackBufferStride;
-                    var dirtyRect = Select(_tiles[0, 0], ptr, stride);
-                    _vm.TileBitmap.AddDirtyRect(dirtyRect);
-                    _vm.TileBitmap.Unlock();
+                    dirtyRects.Add(Select(_tiles[0, 0], ptr, stride));
                 }
             }
             else
             {
                 //Proper drag that spans multiple tiles in both the x- and y-axis
-                var dirtyRects = new ConcurrentBag<Int32Rect>();
-                _vm.TileBitmap.Lock();
-                var ptr = _vm.TileBitmap.BackBuffer;
-                var stride = _vm.TileBitmap.BackBufferStride;
-
                 Parallel.For(minX, maxX, i =>
                 {
                     for (int j = minY; j < maxY; j++)
@@ -354,35 +296,23 @@ namespace DungeonDigger.UI.Controls
                         dirtyRects.Add(rect);
                     }
                 });
-
-                foreach (var rect in dirtyRects)
-                {
-                    _vm.TileBitmap.AddDirtyRect(rect);
-                }
-
-                _vm.TileBitmap.Unlock();
             }
 
             if ((Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) && _previousSelection != null)
             {
-                var dirtyRects = new ConcurrentBag<Int32Rect>();
-                _vm.TileBitmap.Lock();
-                var ptr = _vm.TileBitmap.BackBuffer;
-                var stride = _vm.TileBitmap.BackBufferStride;
-
                 Parallel.ForEach(_previousSelection, tile =>
                 {
                     var rect = Select(tile, ptr, stride);
                     dirtyRects.Add(rect);
                 });
-                
-                foreach (var rect in dirtyRects)
-                {
-                    _vm.TileBitmap.AddDirtyRect(rect);
-                }
-
-                _vm.TileBitmap.Unlock();
             }
+            
+            foreach (var rect in dirtyRects)
+            {
+                _vm.TileBitmap.AddDirtyRect(rect);
+            }
+
+            _vm.TileBitmap.Unlock();
         }
 
         public List<TileStatus> GetSelectedTiles()
@@ -414,13 +344,13 @@ namespace DungeonDigger.UI.Controls
             return map;
         }
 
-        private Int32Rect Select(TileStatus tile, IntPtr backBufferPtr, int backBufferStride)
+        private static Int32Rect Select(TileStatus tile, IntPtr backBufferPtr, int backBufferStride)
         {
             tile.Selected = true;
             return BitmapHelper.SelectTile(backBufferPtr, backBufferStride, tile.X, tile.Y, TileHelper.UI_MAP_TILE_PIXELSIZE);
         }
 
-        private Int32Rect DeSelect(TileStatus tile, IntPtr backBufferPtr, int backBufferStride)
+        private static Int32Rect DeSelect(TileStatus tile, IntPtr backBufferPtr, int backBufferStride)
         {
             tile.Selected = false;
             return BitmapHelper.OverwriteTile(backBufferPtr, backBufferStride, tile.Tile, tile.X, tile.Y, TileHelper.UI_MAP_TILE_PIXELSIZE);
@@ -463,8 +393,8 @@ namespace DungeonDigger.UI.Controls
 
         public event RoutedEventHandler AreaSelectionChanged
         {
-            add { AddHandler(AreaSelectionChangedEvent, value); }
-            remove { RemoveHandler(AreaSelectionChangedEvent, value); }
+            add => AddHandler(AreaSelectionChangedEvent, value);
+            remove => RemoveHandler(AreaSelectionChangedEvent, value);
         }
         #endregion
 

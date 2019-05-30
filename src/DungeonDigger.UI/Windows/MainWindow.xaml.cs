@@ -103,7 +103,6 @@ namespace DungeonDigger.UI.Windows
                 {
                     SetMap(TsvParser.Parse(stream));
                 }
-
             }
         }
 

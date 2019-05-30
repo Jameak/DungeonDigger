@@ -60,13 +60,7 @@ namespace DungeonDigger.UI
                     new ScaleTransform(outputTileSize / (double) internalTileSize,
                         outputTileSize / (double) internalTileSize));
 
-            BitmapEncoder encoder = new PngBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(img));
-
-            using (var fs = new FileStream(path, FileMode.Create))
-            {
-                encoder.Save(fs);
-            }
+            SaveBitmapSource(img, path);
         }
 
         /// <summary>

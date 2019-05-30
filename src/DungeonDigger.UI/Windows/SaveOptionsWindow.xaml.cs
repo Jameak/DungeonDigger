@@ -101,7 +101,7 @@ namespace DungeonDigger.UI.Windows
 
         private void SizeCustomTextBox_OnPreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            e.Handled = !int.TryParse(e.Text, out int _);
+            e.Handled = !int.TryParse(e.Text, out _);
         }
 
         private void SizeCustomTextBox_OnPasting(object sender, DataObjectPastingEventArgs e)
@@ -113,7 +113,7 @@ namespace DungeonDigger.UI.Windows
                     e.CancelCommand();
                 }
 
-                if (!int.TryParse((string)e.DataObject.GetData(typeof(string)), out int _))
+                if (!int.TryParse((string)e.DataObject.GetData(typeof(string)), out _))
                 {
                     e.CancelCommand();
                 }
