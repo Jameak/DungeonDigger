@@ -20,8 +20,9 @@ namespace DungeonDigger.UI.ViewModels
                 Generators.Add(new GeneratorEntry
                 {
                     Name = generator.Item1,
-                    Func = generator.Item2,
-                    Options = generator.Item3
+                    Factory = generator.Item2,
+                    Options = generator.Item3,
+                    Validate = generator.Item4,
                 });
             }
         }
@@ -29,8 +30,9 @@ namespace DungeonDigger.UI.ViewModels
         public class GeneratorEntry
         {
             public string Name { get; set; }
-            public Func<IDictionary<string, object>, IGenerator> Func { get; set; }
+            public Generators.GeneratorFactory Factory { get; set; }
             public IReadOnlyList<GeneratorOption> Options { get; set; }
+            public Generators.ValidateOptions Validate { get; set; }
 
             public override string ToString()
             {

@@ -119,15 +119,23 @@ namespace DungeonDigger.UI.Controls
                 }
             }
 
-            ConstructButton.IsEnabled = false;
-            var map = await Task.Run(() =>
+            var validationResult = selectedGen.Validate.Invoke(options);
+            if (!validationResult.Item1)
             {
-                var generator = selectedGen.Func.Invoke(options);
-                return generator.Construct();
-            });
-            ConstructButton.IsEnabled = true;
+                MessageBox.Show(Window.GetWindow(this), validationResult.Item2, "Invalid Input");
+            }
+            else
+            {
+                ConstructButton.IsEnabled = false;
+                var map = await Task.Run(() =>
+                {
+                    var generator = selectedGen.Factory.Invoke(options);
+                    return generator.Construct();
+                });
+                ConstructButton.IsEnabled = true;
 
-            RaiseEvent(new MapGeneratedEvent(MapGeneratedEvent, map));
+                RaiseEvent(new MapGeneratedEvent(MapGeneratedEvent, map));
+            }
         }
 
         private static void ContrainPreviewToInt(object sender, TextCompositionEventArgs e)
@@ -162,8 +170,8 @@ namespace DungeonDigger.UI.Controls
 
         public event RoutedEventHandler MapGenerated
         {
-            add { AddHandler(MapGeneratedEvent, value); }
-            remove { RemoveHandler(MapGeneratedEvent, value); }
+            add => AddHandler(MapGeneratedEvent, value);
+            remove => RemoveHandler(MapGeneratedEvent, value);
         }
         #endregion
 
