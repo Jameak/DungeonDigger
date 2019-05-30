@@ -6,69 +6,6 @@ using System.Threading.Tasks;
 
 namespace DungeonDigger.Generation
 {
-    /*class Generatorhelper
-    {
-        /// <summary>
-        /// Creates a room of dimensions (x,y) at position (h,w)
-        /// </summary>
-        /// <param name="h"> Height on map coord</param>
-        /// <param name="w"> Width on map coord</param>
-        /// <param name="x">height of room</param>
-        /// <param name="y">width of room</param>
-        public void CreateRoom(Tile[,] Map,Rng rnd, int h, int w, int x, int y)
-        {
-            int p; int q;
-            if (x % 2 == 1)
-            {
-                p = (x - 1) / 2;
-            }
-            else
-            {
-                p = (x / 2) + rnd.RandomInt(0, 1);
-            }
-            if (y % 2 == 1)
-            {
-                q = (y - 1) / 2;
-            }
-            else
-            {
-                q = (y / 2) + rnd.RandomInt(0, 1);
-            }
-            for (int i = 0; i < x; i++)
-            {
-                for (int k = 0; k < y; k++)
-                {
-                    Map[h - p + i, w - q + k] = Tile.Room;
-                }
-            }
-        }
-        public void CreateUnevenRoom(int h, int w, int x, int y)
-        {
-            x = x % 2 == 1 ? x : x - 1;
-            y = y % 2 == 1 ? y : y - 1;
-
-        }
-        /// <summary>
-        /// Creates a fresh probability density with 0's on the edge and 1's everywhere else. Same size as Map
-        /// </summary>
-        /// <returns>0's on edge 1's everywhere else</returns>
-        public double[,] FreshProb(int height, int width)
-        {
-            double[,] prob;
-            prob = new double[height, width];
-            for (int i = 0; i < height; i++)
-            {
-                for (int k = 0; k < width; k++)
-                {
-                    if (k == 0 || i == 0 || k == width - 1 || i == height - 1) { prob[i, k] = 0; }
-                    else { prob[i, k] = 1; }
-                }
-            }
-            return prob;
-        }
-
-    } */
-
     public class Gauss : IGenerator
     {
         Random rnd = new Random();
